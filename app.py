@@ -63,13 +63,20 @@ class EventHandler(AssistantEventHandler):
         logger.info(f"Text done: {text.value}")
 
 def create_assistant():
-    assistant = client.beta.assistants.create(
-        name="Research Assistant",
-        instructions="Always answer the user's questions accurately, with the appropriate context",
-        model="gpt-4o"
-    )
-    logger.info(f"Assistant created: {assistant.id}")
-    return assistant
+    try:
+        assistant = client.beta.assistants.create(
+            name="Research Assistant",
+            instructions="Always answer the user's questions accurately, with the appropriate context",
+            model="gpt-4o"
+        )
+        logger.info(f"Assistant created: {assistant.id}")
+        return assistant
+    except Exception as e:
+        logger.error(f"Error creating assistant: {e}")
+        raise
+
+if 'assistant' not in st.session_state:
+    st.session_state.assistant = create_assistant()
 
 def run_assistant(thread_id, assistant_id, task, placeholder=None):
     handler = EventHandler(placeholder)
