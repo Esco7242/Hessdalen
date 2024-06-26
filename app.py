@@ -172,7 +172,7 @@ st.markdown("""
             border: 1px solid #ddd.
         }
         .article-title {
-            font-size: 1.2em.
+            font-size: 0.8em.
             color: #333.
             font-weight: bold.
         }
