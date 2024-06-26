@@ -1,0 +1,10 @@
+streamlit==1.35.0
+requests==2.32.3
+openai
+python-dotenv==1.0.0
+streamlit-lottie
+typing-extensions
+streamlit-extras==0.4.3
+markdownlit
+pdfreader
+python-docx
