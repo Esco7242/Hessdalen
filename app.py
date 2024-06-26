@@ -130,7 +130,7 @@ st.markdown("""
         }
         @media screen and (min-width: 601px) {
             .main-title {
-                font-size: 60px;
+                font-size: 48px;
             }
         }
         .main-title {
@@ -172,7 +172,7 @@ st.markdown("""
             border: 1px solid #ddd.
         }
         .article-title {
-            font-size: 0.8em.
+            font-size: 1.2em.
             color: #333.
             font-weight: bold.
         }
