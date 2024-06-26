@@ -188,7 +188,7 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # Title
-st.markdown("<h1 class='main-title'>Brilliance</h1>", unsafe_allow_html=True)
+st.markdown("<h1 class='main-title'>Brilliance (Project Hessdalen Beta)</h1>", unsafe_allow_html=True)
 
 # Initialize conversation history and user_input in session state
 if 'conversation_history' not in st.session_state:
