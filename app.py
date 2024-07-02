@@ -13,13 +13,22 @@ import pandas as pd
 from pdfreader import SimplePDFViewer, PageDoesNotExist
 import io
 import docx
+from PIL import Image
+import time
 
 OPENAI_API_KEY = st.secrets["openai"]["api_key"]
+NCBI_BASE_URL = st.secrets["ncbi"]["base_url"]
+SPRINGER_API_KEY = st.secrets["springer"]["api_key"]
+SPRINGER_BASE_URL = st.secrets["springer"]["base_url"]
 ASSISTANT_ID = st.secrets["assistant"]["id"]
 CORE_API_KEY = st.secrets["core"]["api_key"]
 CORE_BASE_URL = st.secrets["core"]["base_url"]
+CROSSREF_BASE_URL = "https://api.crossref.org"
 
 assert OPENAI_API_KEY, "OPENAI_API_KEY is not set"
+assert NCBI_BASE_URL, "NCBI_BASE_URL is not set"
+assert SPRINGER_API_KEY, "SPRINGER_API_KEY is not set"
+assert SPRINGER_BASE_URL, "SPRINGER_BASE_URL is not set"
 assert CORE_API_KEY, "CORE_API_KEY is not set"
 
 # Setup logging
@@ -33,6 +42,17 @@ logger.info("Environment variables loaded successfully")
 # Initialize OpenAI client
 client = OpenAI(api_key=OPENAI_API_KEY)
 logger.info("OpenAI client initialized")
+
+# Define API specialties
+api_specialties = {
+    "All": "All Sources",
+    "Arxiv": "Physics, Mathematics, Computer Science",
+    "PLOS": "Biology, Medicine, Environment",
+    "Springer": "Science, Engineering, Medicine",
+    "NCBI": "Biology, Medicine, Genetics",
+    "CORE": "Research, Publications, Open Access",
+    "Crossref": "Metadata, DOI, References"
+}
 
 class EventHandler(AssistantEventHandler):
     def __init__(self, placeholder=None):
@@ -63,21 +83,16 @@ class EventHandler(AssistantEventHandler):
         logger.info(f"Text done: {text.value}")
 
 def create_assistant():
-    try:
-        assistant = client.beta.assistants.create(
-            name="Research Assistant",
-            instructions="Always answer the user's questions accurately, with the appropriate context",
-            model="gpt-4o"
-        )
-        logger.info(f"Assistant created: {assistant.id}")
-        return assistant
-    except Exception as e:
-        logger.error(f"Error creating assistant: {e}")
-        raise
-
-if 'assistant' not in st.session_state:
-    st.session_state.assistant = create_assistant()
-
+    assistant = client.beta.assistants.create(
+        name="Research Assistant",
+        instructions="""
+        You are a research assistant. Your beams are wide, however accuracy is of the utmost importance
+        """,
+        model="gpt-4o"
+    )
+    logger.info(f"Assistant created: {assistant.id}")
+    return assistant
+    
 def run_assistant(thread_id, assistant_id, task, placeholder=None):
     handler = EventHandler(placeholder)
     logger.info(f"Running assistant {assistant_id} for thread {thread_id} with task: {task}")
@@ -98,6 +113,18 @@ def create_thread():
     return thread
 
 def add_message_to_thread(thread_id, content, role="user"):
+    # Retrieve all runs for the thread
+    runs = client.beta.threads.runs.list(thread_id=thread_id)
+    
+    # Check if there are any active runs
+    active_run = next((run for run in runs if run.status in ["queued", "in_progress"]), None)
+    
+    while active_run:
+        logger.info(f"Waiting for active run to complete for thread {thread_id}")
+        time.sleep(1)  # Wait for a second before checking again
+        runs = client.beta.threads.runs.list(thread_id=thread_id)
+        active_run = next((run for run in runs if run.status in ["queued", "in_progress"]), None)
+    
     message = client.beta.threads.messages.create(
         thread_id=thread_id,
         role=role,
@@ -130,7 +157,7 @@ st.markdown("""
         }
         @media screen and (min-width: 601px) {
             .main-title {
-                font-size: 48px;
+                font-size: 60px;
             }
         }
         .main-title {
@@ -188,7 +215,7 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # Title
-st.markdown("<h1 class='main-title'>Brilliance (Project Hessdalen Beta)</h1>", unsafe_allow_html=True)
+st.markdown("<h1 class='main-title'>Brilliance</h1>", unsafe_allow_html=True)
 
 # Initialize conversation history and user_input in session state
 if 'conversation_history' not in st.session_state:
@@ -204,13 +231,19 @@ user_input = st.text_input("Research Question", key="user_input", placeholder="E
 generate = st.button("Generate", key='generate_button', help="Click to generate a response")
 response_placeholder = st.empty()
 
+# Add a radio button for selecting response length
+length_selection = st.radio(
+    "Select response length:",
+    ("Short", "Medium", "Full/Long"),
+    index=1  # Default to "Medium"
+)
+
 # Setup assistant and thread outside the button click logic
 if 'assistant' not in st.session_state:
     st.session_state.assistant = create_assistant()
 if 'thread' not in st.session_state:
     st.session_state.thread = create_thread()
 
-    
 def optimize_question(thread_id, question):
     task = (
         f"Transform the question: {question} to be the very optimal, precise and clear. Only, I REPEAT: ONLY, output the optimized revised question."
@@ -225,6 +258,22 @@ def optimize_question(thread_id, question):
         logger.warning("No optimized question generated")
         return question
 
+# Function to optimize the question
+def optimize_question(thread_id, question):
+    task = (
+        f"Transform the question: {question} to be the very optimal, precise and clear. Only, I REPEAT: ONLY, output the optimized revised question."
+    )
+    add_message_to_thread(thread_id, task)
+    response_text = run_assistant(thread_id, st.session_state.assistant.id, task)
+    if response_text:
+        optimized_question = response_text.strip()
+        logger.info(f"Optimized question: {optimized_question}")
+        return optimized_question
+    else:
+        logger.warning("No optimized question generated")
+        return question
+
+# Function to extract keywords from the optimized question
 def extract_keywords(thread_id, question):
     optimized_question = optimize_question(thread_id, question)
     task = (
@@ -242,8 +291,8 @@ def extract_keywords(thread_id, question):
         logger.warning("No keywords extracted")
         return []
 
-# Add file uploader for users to upload their files
-uploaded_files = st.file_uploader("Upload your files", type=["txt", "pdf", "docx"], accept_multiple_files=True)
+# Add file uploader for users to upload their images
+uploaded_files = st.file_uploader("Upload your files", type=["txt", "pdf", "docx", "png", "jpg", "jpeg"], accept_multiple_files=True)
 
 # Process uploaded files
 uploaded_files_content = []
@@ -277,25 +326,100 @@ if uploaded_files:
             doc = docx.Document(io.BytesIO(uploaded_file.getvalue()))
             text = "\n".join([para.text for para in doc.paragraphs])
             uploaded_files_content.append(text)
-            st.text_area(f"Content of {uploaded_file.name}", text)         
+            st.text_area(f"Content of {uploaded_file.name}", text)
 
-def generate_response(thread_id, assistant_id, context, uploaded_content, placeholder):
+# Generate response with the combined context
+def generate_response(question, length, context, uploaded_content, placeholder):
+    if not question.strip():
+        st.error("Please enter a valid research question.")
+        return ""
+    
     combined_context = context + "\n\n" + "\n\n".join(uploaded_content)
-    prompt = (
-        f"You are Brilliance, a GPT-4o model with access to major journals. Your sole task is to accurately, and I repeat: accurately, answer the user's question with empirical data. You will emulate a wide beam search when considering your choice of words. This is the most important thing to remember. Deliver a brilliant and detailed, scientifically validated response to {st.session_state.user_input}, using the context below, citing the studies' authors and years immediately after presenting facts. "
-        f"Clarify the mechanisms of action when discussing medicine. Place a higher emphasis on the most recent studies but consider ALL relevant research. Craft the answer in natural, flowing language, avoiding numbered lists or subtopic breakdowns. Synthesize information from recent and cutting-edge research, "
-        f"emphasizing groundbreaking discoveries and their practical implications. Highlight innovative theories or advancements that could revolutionize our understanding, "
-        f"focusing on the unique aspects of the research question within the latest context. Reference the original question frequently, aiming for approximately 600 words. "
-        f"Include accurate data, values, variables, and relevant names or places. Be specific, avoid generalizations, and eschew repetitive phrasing. Aim to leave the reader "
-        f"with a profound understanding, using a natural academic tone suitable for an audience with an IQ of 200. Extrapolate and synthesize groundbreaking insights. "
-        f"Ensure the question is completely and accurately answered, considering the data from \n\n{combined_context}\n\n. Make sure your results show groundbreaking findings. Remember to synthesize responses with citations in parentheses. Just use relevant author names and year in the prompt. "
-        f"Shoot for 1000 words. Place high emphasis on cutting edge research, innovative applications and potential future directions that could revolutionize the field, all while accurately and PRECISELY, with clarity, i repeat: PRECISELY, with clarity, answering the user's question. Remember, your goal is definitively answer the user's question even if the specific synthesis of knowledge was not explicitly stated. Do not include a references section at the end, that is a separate feature. Make sure language is refined to emphasize key points and clarity. Question: {st.session_state.user_input}."
-    )
-    logger.info(f"Prompt: {prompt}")  # Print the prompt to see the user input with context and question
-    add_message_to_thread(thread_id, prompt)
-    response_text = run_assistant(thread_id, assistant_id, prompt, placeholder)
-    logger.info(f"Generated response: {response_text[:50]}...")  # Displaying only the first 50 characters
-    return response_text
+    
+    # Generate response with the combined context
+# Generate response with the combined context
+def generate_response(question, length, context, uploaded_content, placeholder):
+    if not question.strip():
+        st.error("Please enter a valid research question.")
+        return ""
+    
+    combined_context = context + "\n\n" + "\n\n".join(uploaded_content)
+    
+    def generate_prompt(optimized_question, length):
+        base_prompt = (
+            f"You are Brilliance, a GPT-4o model. Answer '{optimized_question}' using context below:\n\n{combined_context}\n\n"
+        )
+        length_prompts = {
+            "Short": f"""
+            You are Brilliance, a GPT-4o model with access to major journals. Your sole task is to accurately, and I repeat: accurately, answer the user's question with empirical data. You will emulate a wide beam search when considering your choice of words. This is the most important thing to remember. Deliver a brilliant and detailed, scientifically validated response to {optimized_question}, using the context below, citing the studies' authors and years immediately after presenting facts. 
+            Clarify the mechanisms of action when discussing medicine. Place a higher emphasis on the most recent studies but consider ALL relevant research. Craft the answer in natural, flowing language, avoiding numbered lists or subtopic breakdowns. Synthesize information from recent and cutting-edge research, 
+            emphasizing groundbreaking discoveries and their practical implications. Highlight innovative theories or advancements that could revolutionize our understanding, 
+            focusing on the unique aspects of the research question within the latest context. Reference the original question frequently, aiming for approximately 100 words. 
+            Include accurate data, values, variables, and relevant names or places. Be specific, avoid generalizations, and eschew repetitive phrasing. Aim to leave the reader 
+            with a profound understanding, using a natural academic tone suitable for an audience with an IQ of 200. Extrapolate and synthesize groundbreaking insights. 
+            Ensure the question is completely and accurately answered, considering the data from \n\n{combined_context}\n\n. Make sure your results show groundbreaking findings. Remember to synthesize responses with citations in parentheses. Just use relevant author names and year in the prompt. 
+            Shoot for 100 words. Place high emphasis on cutting edge research, innovative applications and potential future directions that could revolutionize the field, all while accurately and PRECISELY, with clarity, I repeat: PRECISELY, with clarity, answering the user's question. Remember, your goal is definitively answer the user's question even if the specific synthesis of knowledge was not explicitly stated. Do not include a references section at the end, that is a separate feature. Make sure language is refined to emphasize key points and clarity. Question: {optimized_question}.
+            """,
+            "Medium": f"""
+            You are Brilliance, a GPT-4o model with access to major journals. Your sole task is to accurately, and I repeat: accurately, answer the user's question with empirical data. You will emulate a wide beam search when considering your choice of words. This is the most important thing to remember. Deliver a brilliant and detailed, scientifically validated response to {optimized_question}, using the context below, citing the studies' authors and years immediately after presenting facts. 
+            Clarify the mechanisms of action when discussing medicine. Place a higher emphasis on the most recent studies but consider ALL relevant research. Craft the answer in natural, flowing language, avoiding numbered lists or subtopic breakdowns. Synthesize information from recent and cutting-edge research, 
+            emphasizing groundbreaking discoveries and their practical implications. Highlight innovative theories or advancements that could revolutionize our understanding, 
+            focusing on the unique aspects of the research question within the latest context. Reference the original question frequently, aiming for approximately 250 words. 
+            Include accurate data, values, variables, and relevant names or places. Be specific, avoid generalizations, and eschew repetitive phrasing. Aim to leave the reader 
+            with a profound understanding, using a natural academic tone suitable for an audience with an IQ of 200. Extrapolate and synthesize groundbreaking insights. 
+            Ensure the question is completely and accurately answered, considering the data from \n\n{combined_context}\n\n. Make sure your results show groundbreaking findings. Remember to synthesize responses with citations in parentheses. Just use relevant author names and year in the prompt. 
+            Shoot for 250 words. Place high emphasis on cutting edge research, innovative applications and potential future directions that could revolutionize the field, all while accurately and PRECISELY, with clarity, I repeat: PRECISELY, with clarity, answering the user's question. Remember, your goal is definitively answer the user's question even if the specific synthesis of knowledge was not explicitly stated. Do not include a references section at the end, that is a separate feature. Make sure language is refined to emphasize key points and clarity. Question: {optimized_question}.
+            """,
+            "Full/Long": f"""
+            You are Brilliance, a GPT-4o model with access to major journals. Your sole task is to accurately, and I repeat: accurately, answer the user's question with empirical data. You will emulate a wide beam search when considering your choice of words. This is the most important thing to remember. Deliver a brilliant and detailed, scientifically validated response to {optimized_question}, using the context below, citing the studies' authors and years immediately after presenting facts. 
+            Clarify the mechanisms of action when discussing medicine. Place a higher emphasis on the most recent studies but consider ALL relevant research. Craft the answer in natural, flowing language, avoiding numbered lists or subtopic breakdowns. Synthesize information from recent and cutting-edge research, 
+            emphasizing groundbreaking discoveries and their practical implications. Highlight innovative theories or advancements that could revolutionize our understanding, 
+            focusing on the unique aspects of the research question within the latest context. Reference the original question frequently, aiming for approximately 1000 words. 
+            Include accurate data, values, variables, and relevant names or places. Be specific, avoid generalizations, and eschew repetitive phrasing. Aim to leave the reader 
+            with a profound understanding, using a natural academic tone suitable for an audience with an IQ of 200. Extrapolate and synthesize groundbreaking insights. 
+            Ensure the question is completely and accurately answered, considering the data from \n\n{combined_context}\n\n. Make sure your results show groundbreaking findings. Remember to synthesize responses with citations in parentheses. Just use relevant author names and year in the prompt. 
+            Shoot for 1000 words. Place high emphasis on cutting edge research, innovative applications and potential future directions that could revolutionize the field, all while accurately and PRECISELY, with clarity, I repeat: PRECISELY, with clarity, answering the user's question. Remember, your goal is definitively answer the user's question even if the specific synthesis of knowledge was not explicitly stated. Do not include a references section at the end, that is a separate feature. Make sure language is refined to emphasize key points and clarity. Question: {optimized_question}.
+            """
+        }
+        return base_prompt + length_prompts.get(length, length_prompts["Medium"])
+    
+    optimized_question = optimize_question(st.session_state.thread.id, question)
+    prompt = generate_prompt(optimized_question, length)
+    logger.info(f"Generated prompt: {prompt[:50]}...")
+
+    # Add the generated message to the thread
+    add_message_to_thread(st.session_state.thread.id, prompt)
+    
+    # Run the assistant and wait for the response using streaming
+    handler = EventHandler(placeholder)
+    with client.beta.threads.runs.stream(
+        thread_id=st.session_state.thread.id,
+        assistant_id=st.session_state.assistant.id,
+        event_handler=handler,
+    ) as stream:
+        stream.until_done()
+    
+    logger.info(f"Generated response: {handler.text_accumulated[:50]}...")
+    return handler.text_accumulated
+    
+    optimized_question = optimize_question(st.session_state.thread.id, question)
+    prompt = generate_prompt(optimized_question, length)
+    logger.info(f"Generated prompt: {prompt[:50]}...")
+
+    # Add the generated message to the thread
+    add_message_to_thread(st.session_state.thread.id, prompt)
+    
+    # Run the assistant and wait for the response using streaming
+    handler = EventHandler(placeholder)
+    with client.beta.threads.runs.stream(
+        thread_id=st.session_state.thread.id,
+        assistant_id=st.session_state.assistant.id,
+        event_handler=handler,
+    ) as stream:
+        stream.until_done()
+    
+    logger.info(f"Generated response: {handler.text_accumulated[:50]}...")
+    return handler.text_accumulated
 
 def parse_publication_year(date_string):
     try:
@@ -305,8 +429,8 @@ def parse_publication_year(date_string):
     except ValueError:
         logger.error(f"Error parsing date: {date_string}")
         return "Unknown Year"
-    
-def search_coreapi(keywords):
+
+def search_coreapi(keywords, num_results):
     if not keywords:
         logger.warning("No keywords provided for CORE API search.")
         return []
@@ -320,7 +444,7 @@ def search_coreapi(keywords):
     }
     params = {
         'q': query,
-        'limit': 12
+        'limit': num_results
     }
 
     # Log the full API query details
@@ -351,13 +475,13 @@ def search_coreapi(keywords):
 
     logger.info(f"CORE API search results: {len(articles)} articles found")
     return articles
-    
-def search_arxiv(keywords):
+
+def search_arxiv(keywords, num_results):
     if not keywords:
         logger.warning("No keywords provided for Arxiv search.")
         return []
     query = '+'.join(keywords)
-    url = f"http://export.arxiv.org/api/query?search_query=all:{query}&start=1&max_results=15"
+    url = f"http://export.arxiv.org/api/query?search_query=all:{query}&start=1&max_results={num_results}"
     response = requests.get(url)
     logger.info(f"Arxiv API response status: {response.status_code}")
     root = ElementTree.fromstring(response.content)
@@ -378,9 +502,105 @@ def search_arxiv(keywords):
     logger.info(f"Arxiv search results: {len(articles)} articles found")
     return articles
 
-def search_plos(keywords):
-    def get_plos_results(query):
-        url = f"https://api.plos.org/search?q=everything:{query}&fl=id,title_display,abstract,author_display,journal,publication_date&wt=json&rows=7"
+def search_ncbi(keywords, num_results):
+    if not keywords:
+        logger.warning("No keywords provided for NCBI search.")
+        return []
+
+    query = '+'.join(keywords)
+    url = f"{NCBI_BASE_URL}esearch.fcgi?db=pubmed&term={query}&retmode=json&retmax={num_results}"
+    response = requests.get(url)
+    logger.info(f"NCBI API response status: {response.status_code}")
+
+    if response.status_code != 200:
+        logger.error(f"Error fetching data from NCBI: {response.text}")
+        return []
+
+    id_list = response.json().get('esearchresult', {}).get('idlist', [])
+    articles = []
+
+    if id_list:
+        fetch_url = f"{NCBI_BASE_URL}efetch.fcgi?db=pubmed&id={','.join(id_list)}&retmode=xml"
+        fetch_response = requests.get(fetch_url)
+        logger.info(f"NCBI fetch API response status: {fetch_response.status_code}")
+
+        if fetch_response.status_code != 200:
+            logger.error(f"Error fetching detailed data from NCBI: {fetch_response.text}")
+            return []
+
+        root = ElementTree.fromstring(fetch_response.content)
+        for article in root.findall('.//PubmedArticle'):
+            title = article.find('.//ArticleTitle')
+            abstract = article.find('.//AbstractText')
+            pubmed_id = article.find('.//ArticleId[@IdType="pubmed"]')
+            pub_date = article.find('.//PubDate/Year')
+            authors = [
+                author.find('LastName').text + " " + author.find('ForeName').text
+                for author in article.findall('.//Author')
+                if author.find('LastName') is not None and author.find('ForeName') is not None
+            ]
+            articles.append({
+                'title': title.text if title is not None else 'No title',
+                'abstract': abstract.text if abstract is not None else 'No abstract',
+                'id': pubmed_id.text if pubmed_id is not None else 'No ID',
+                'published': pub_date.text if pub_date is not None else 'No date',
+                'authors': authors,
+                'source': 'PubMed',
+                'url': f"https://pubmed.ncbi.nlm.nih.gov/{pubmed_id.text}/" if pubmed_id is not None else 'No URL'
+            })
+
+    logger.info(f"NCBI search results: {len(articles)} articles found")
+    return articles
+
+def search_crossref(keywords, num_results):
+    if not keywords:
+        logger.warning("No keywords provided for Crossref search.")
+        return []
+
+    query = ' '.join(keywords)
+    url = f"{CROSSREF_BASE_URL}/works"
+    params = {
+        'query': query,
+        'rows': num_results,
+        'filter': 'has-abstract:true',
+        'select': 'DOI,title,abstract,author,published,URL'
+    }
+    headers = {
+        "User-Agent": "YourAppName/1.0 (mailto:your-email@example.com)"
+    }
+    
+    response = requests.get(url, params=params, headers=headers)
+    logger.info(f"Crossref API response status: {response.status_code}")
+    
+    if response.status_code != 200:
+        logger.error(f"Error fetching data from Crossref: {response.text}")
+        return []
+    
+    data = response.json()
+    articles = []
+    for item in data.get('message', {}).get('items', []):
+        authors = [f"{author.get('given', '')} {author.get('family', '')}".strip() for author in item.get('author', [])]
+        abstract = item.get('abstract', 'No abstract')
+        if isinstance(abstract, str):
+            abstract = abstract.replace('\n', ' ').strip()
+        else:
+            abstract = 'No abstract'
+        
+        articles.append({
+            'title': item.get('title', ['No title'])[0],
+            'abstract': abstract,
+            'published': item.get('published-print', {}).get('date-parts', [['']])[0][0],
+            'authors': authors,
+            'source': 'Crossref',
+            'url': item.get('URL', '')
+        })
+    
+    logger.info(f"Crossref search results: {len(articles)} articles found")
+    return articles
+
+def search_plos(keywords, num_results):
+    def get_plos_results(query, num_results):
+        url = f"https://api.plos.org/search?q=everything:{query}&fl=id,title_display,abstract,author_display,journal,publication_date&wt=json&rows={num_results}"
         try:
             response = requests.get(url, allow_redirects=True)
             logger.info(f"PLOS API response status: {response.status_code}")
@@ -426,16 +646,38 @@ def search_plos(keywords):
 
     # First attempt with all keywords
     query = '+'.join(keywords)
-    articles = get_plos_results(query)
-
+    articles = get_plos_results(query, num_results)
+    
     # If no results, retry with only the top 2 keywords
     if not articles:
         logger.info("No results with all keywords, retrying with top 2 keywords")
         query = '+'.join(keywords[:2])
-        articles = get_plos_results(query)
+        articles = get_plos_results(query, num_results)
         
     return articles
 
+def search_springer(keywords, num_results):
+    if not keywords:
+        logger.warning("No keywords provided for Springer search.")
+        return []
+    query = ' AND '.join(keywords)
+    url = f"{SPRINGER_BASE_URL}?q={query}&api_key={SPRINGER_API_KEY}&p={num_results}"
+    response = requests.get(url)
+    logger.info(f"Springer API response status: {response.status_code}")
+    data = response.json()
+    articles = []
+    for record in data.get('records', []):
+        articles.append({
+            'title': record['title'],
+            'abstract': record.get('abstract', ''),
+            'id': record.get('identifier', ''),
+            'published': record.get('publicationDate', '')[:4], # Taking only the year part
+            'authors': [creator['creator'] for creator in record.get('creators', [])],
+            'source': record.get('publicationName', 'Springer'),
+            'url': record.get('url', '')
+        })
+    logger.info(f"Springer search results: {len(articles)} articles found")
+    return articles
 
 def display_article_card(article, is_dark_mode=False):
     # Ensure that the abstract is a string
@@ -447,6 +689,45 @@ def display_article_card(article, is_dark_mode=False):
     abstract_lines = abstract.split('\n')
     first_3_lines = '\n'.join(abstract_lines[:3])
 
+    # Define CSS styles
+    css_styles = """
+    <style>
+    .article-card {
+        background-color: #f9f9f9;
+        padding: 20px;
+        border-radius: 10px;
+        margin-bottom: 20px;
+        border: 1px solid #ddd;
+        box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        transition: transform 0.2s ease-in-out;
+    }
+    .article-card:hover {
+        transform: translateY(-5px);
+    }
+    .article-title {
+        font-size: 1.5em;
+        color: #333;
+        font-weight: bold;
+        text-decoration: none;
+        margin-bottom: 10px;
+        display: block;
+    }
+    .article-title:hover {
+        text-decoration: underline;
+    }
+    .article-authors, .article-details {
+        color: #777;
+    }
+    .article-details p {
+        margin: 5px 0;
+    }
+    </style>
+    """
+
+    # Apply CSS styles
+    st.markdown(css_styles, unsafe_allow_html=True)
+
+    # Create the article card
     st.markdown(f"""
     <div class='article-card'>
         <a href="{article['url']}" class='article-title'>{article['title']}</a>
@@ -459,15 +740,34 @@ def display_article_card(article, is_dark_mode=False):
     </div>
     """, unsafe_allow_html=True)
     logger.info(f"Displayed article: {article['title']}")
-    
-# API selection checkboxes
-use_arxiv = st.checkbox("Use Arxiv", value=True)
-use_plos = st.checkbox("Use PLOS", value=True)
-use_core = st.checkbox("Use CORE", value=True)
 
-if generate:
-    if user_input == "":
-        st.warning("Please enter a message ⚠️")
+# Define API specialties
+api_specialties = {
+    "All": "All Sources",
+    "Arxiv": "Physics, Mathematics, Computer Science",
+    "PLOS": "Biology, Medicine, Environment",
+    "Springer": "Science, Engineering, Medicine",
+    "NCBI": "Biology, Medicine, Genetics",
+    "CORE": "Research, Publications, Open Access",
+    "Crossref": "Metadata, DOI, References"
+}
+
+# API selection checkboxes
+st.markdown("### Select APIs to use:")
+selected_apis = []
+for api, specialty in api_specialties.items():
+    if st.checkbox(f"{api} ({specialty})", value=True):
+        selected_apis.append(api)
+
+if not selected_apis:
+    st.warning("Please select at least one API.")
+
+# Main logic for your Streamlit app
+if user_input == "":
+    st.warning("Please enter a message ⚠️")
+else:
+    if not selected_apis:
+        st.warning("Please select at least one API.")
     else:
         with st_lottie_spinner(loading_animation):
             logger.info(f"User input: {user_input}")
@@ -476,23 +776,39 @@ if generate:
             keywords = extract_keywords(st.session_state.thread.id, user_input)
             logger.info(f"Keywords: {keywords}")
 
-            # Search databases based on user selection
+            # Define number of results based on length selection
+            num_results = {"Short": 3, "Medium": 5, "Full/Long": 10}[length_selection]
+
+            # Initialize an empty list to store all articles
             all_articles = []
 
-            # Search Arxiv
-            if use_arxiv:
-                arxiv_articles = search_arxiv(keywords)
+            # Search databases based on user selection
+            if "Arxiv" in selected_apis:
+                arxiv_articles = search_arxiv(keywords, num_results)
                 all_articles.extend(arxiv_articles)
 
-            # Search PLOS
-            if use_plos:
-                plos_articles = search_plos(keywords)
+            if "PLOS" in selected_apis:
+                plos_articles = search_plos(keywords, num_results)
                 all_articles.extend(plos_articles)
 
-            # Search CORE API
-            if use_core:
-                core_articles = search_coreapi(keywords)
+            if "Springer" in selected_apis:
+                springer_articles = search_springer(keywords, num_results)
+                all_articles.extend(springer_articles)
+
+            if "NCBI" in selected_apis:
+                ncbi_articles = search_ncbi(keywords, num_results)
+                all_articles.extend(ncbi_articles)
+
+            if "CORE" in selected_apis:
+                core_articles = search_coreapi(keywords, num_results)
                 all_articles.extend(core_articles)
+
+            if "Crossref" in selected_apis:
+                crossref_articles = search_crossref(keywords, num_results)
+                all_articles.extend(crossref_articles)
+
+            # Limit the total number of articles based on length selection
+            all_articles = all_articles[:num_results * len(selected_apis)]
 
             # Create context for response generation
             context = "\n".join(
@@ -500,15 +816,18 @@ if generate:
                 for article in all_articles
                 if article['title'] and article['abstract'] and article['authors']
             )
-            logger.info(f"Context for response generation: {context[:50]}...") # Displaying only the first 50 characters
+            logger.info(f"Context for response generation: {context[:50]}...")  # Displaying only the first 50 characters
 
             # Generate response
-            response = generate_response(st.session_state.thread.id, st.session_state.assistant.id, context, uploaded_files_content, response_placeholder)
-            logger.info(f"Response: {response[:50]}...") # Displaying only the first 50 characters
+            response = generate_response(st.session_state.user_input, length_selection, context, uploaded_files_content, response_placeholder)
+            logger.info(f"Response: {response[:50]}...")  # Displaying only the first 50 characters
 
             # Update conversation history
             st.session_state.conversation_history.append({"role": "user", "content": user_input})
             st.session_state.conversation_history.append({"role": "assistant", "content": response})
+
+            # Display the response
+            response_placeholder.markdown(response)
 
             # Display the articles
             for article in all_articles:
