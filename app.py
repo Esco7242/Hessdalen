@@ -16,6 +16,93 @@ import docx
 from PIL import Image
 import time
 
+# Custom CSS for layout and spacing
+st.markdown("""
+    <style>
+        .main-title {
+            margin-top: 40px;
+            margin-bottom: 20px;
+        }
+        .input-area, .api-selection, .response-section {
+            margin-top: 20px;
+            margin-bottom: 20px;
+            padding: 20px;
+            border-radius: 10px;
+            background-color: #f9f9f9;
+        }
+        .custom-button {
+            margin-top: 10px;
+        }
+    </style>
+""", unsafe_allow_html=True)
+
+# Custom CSS for color scheme and typography
+st.markdown("""
+    <style>
+        body {
+            background-color: #f0f2f6;
+        }
+        .main-title {
+            color: #4CAF50;
+        }
+        .input-area, .api-selection, .response-section {
+            background-color: #ffffff;
+            border: 1px solid #ddd;
+        }
+        .custom-button {
+            background-color: #4CAF50;
+            color: white;
+        }
+        .custom-button:hover {
+            background-color: #45a049;
+        }
+        .upload-box {
+            background-color: #e0e0e0;
+            border: 2px dashed #ccc;
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        .upload-box:hover {
+            background-color: #d0d0d0;
+        }
+        .search-box {
+            width: 100%;
+            font-size: 18px;
+            padding: 10px;
+            border-radius: 5px;
+            border: 1px solid #ccc;
+            margin-bottom: 20px;
+        }
+        .options-container {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 20px;
+        }
+        .section-title {
+            font-size: 1.2em;
+            font-weight: normal;  /* Remove bold */
+            color: #333;
+        }
+        .options-container label {
+            font-size: 1em;
+            color: #333;
+        }
+        .api-warning {
+            display: none;
+            color: #FFA500;
+            font-size: 1em;
+        }
+    </style>
+""", unsafe_allow_html=True)
+
+# Load Google Fonts
+st.markdown("""
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
+""", unsafe_allow_html=True)
+
+
 OPENAI_API_KEY = st.secrets["openai"]["api_key"]
 NCBI_BASE_URL = st.secrets["ncbi"]["base_url"]
 SPRINGER_API_KEY = st.secrets["springer"]["api_key"]
@@ -43,15 +130,14 @@ logger.info("Environment variables loaded successfully")
 client = OpenAI(api_key=OPENAI_API_KEY)
 logger.info("OpenAI client initialized")
 
-# Define API specialties
+# Define API specialties with emojis
 api_specialties = {
-    "All": "All Sources",
-    "Arxiv": "Physics, Mathematics, Computer Science",
-    "PLOS": "Biology, Medicine, Environment",
-    "Springer": "Science, Engineering, Medicine",
-    "NCBI": "Biology, Medicine, Genetics",
-    "CORE": "Research, Publications, Open Access",
-    "Crossref": "Metadata, DOI, References"
+    "Arxiv": "Physics, Mathematics 🔬",
+    "PLOS": "Biology, Medicine 🌿",
+    "Springer": "Science, Medicine ⚙️",
+    "NCBI": "Biology, Medicine 🧬",
+    "CORE": "Research, Publications 📚",
+    "Crossref": "Metadata, DOI, References 🔗"
 }
 
 class EventHandler(AssistantEventHandler):
@@ -147,7 +233,6 @@ def load_lottiefile(filepath: str):
 # Load Lottie animation for loading
 loading_animation = load_lottiefile("animation.json")
 
-# Custom CSS for fonts and styles
 st.markdown("""
     <style>
         @media screen and (max-width: 600px) {
@@ -178,38 +263,62 @@ st.markdown("""
         }
         .input-area {
             font-family: 'Courier New', monospace;
-            margin-top: 22px.
+            margin-top: 22px;
         }
         .custom-button {
             background-color: #4CAF50;
             color: white;
-            border: none.
-            padding: 10px 20px.
-            font-size: 16px.
-            cursor: pointer.
+            border: none;
+            padding: 10px 20px;
+            font-size: 16px;
+            cursor: pointer;
         }
         .custom-button:hover {
-            background-color: #45a049.
+            background-color: #45a049;
         }
         .article-card {
-            background-color: #f9f9f9.
-            padding: 15px.
-            border-radius: 10px.
-            margin-bottom: 20px.
-            border: 1px solid #ddd.
+            background-color: #f9f9f9;
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            border: 1px solid #ddd;
         }
         .article-title {
-            font-size: 1.2em.
-            color: #333.
-            font-weight: bold.
+            font-size: 1.2em;
+            color: #333;
+            font-weight: bold;
         }
         .article-authors {
-            color: #777.
+            color: #777;
         }
         .article-details {
-            margin-top: 10px.
-            font-size: 0.9em.
-            color: #555.
+            margin-top: 10px;
+            font-size: 0.9em;
+            color: #555;
+        }
+        .upload-box {
+            background-color: #e0e0e0;
+            border: 2px dashed #ccc;
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        .upload-box:hover {
+            background-color: #d0d0d0;
+        }
+        .search-box {
+            width: 100%;
+            font-size: 18px;
+            padding: 10px;
+            border-radius: 5px;
+            border: 1px solid #ccc;
+            margin-bottom: 20px;
+        }
+        .options-container {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 20px;
         }
     </style>
 """, unsafe_allow_html=True)
@@ -217,82 +326,89 @@ st.markdown("""
 # Title
 st.markdown("<h1 class='main-title'>Brilliance</h1>", unsafe_allow_html=True)
 
-# Initialize conversation history and user_input in session state
-if 'conversation_history' not in st.session_state:
-    st.session_state.conversation_history = [{"role": "system", "content": "You are a helpful assistant."}]
-    logger.info("Conversation history initialized")
-
-if 'user_input' not in st.session_state:
-    st.session_state.user_input = ""
+# Upload Box
+uploaded_files = st.file_uploader("", type=["txt", "pdf", "docx"], accept_multiple_files=True)
 
 # User Input Section
-st.markdown("<div class='input-area'><b></b></div>", unsafe_allow_html=True)
-user_input = st.text_input("Research Question", key="user_input", placeholder="Enter your research question here...", label_visibility="collapsed")
-generate = st.button("Generate", key='generate_button', help="Click to generate a response")
+user_input = st.text_input("", key="user_input", placeholder="Enter your research question here...", label_visibility="collapsed", max_chars=200)
+generate = st.button("Generate", key='generate_button', help="Click to generate a response", use_container_width=True)
 response_placeholder = st.empty()
 
-# Add a radio button for selecting response length
-length_selection = st.radio(
-    "Select response length:",
-    ("Short", "Medium", "Full/Long"),
-    index=1  # Default to "Medium"
-)
+# Custom CSS for layout and spacing
+st.markdown("""
+    <style>
+        .main-title {
+            margin-top: 40px;
+            margin-bottom: 20px;
+        }
+        .input-area, .api-selection, .response-section {
+            margin-top: 20px;
+            margin-bottom: 20px;
+            padding: 20px;
+            border-radius: 10px;
+            background-color: #f9f9f9;
+        }
+        .custom-button {
+            margin-top: 10px;
+        }
+        .options-container .section-title {
+            font-size: 16px;
+            font-weight: 400;
+            color: red;  /* Change text color to red */
+            margin-bottom: 10px;
+            position: relative;
+        }
+        .options-container .section-title::after {
+            content: "";
+            display: block;
+            width: 100%;
+            border-bottom: 2px solid red;
+            position: absolute;
+            left: 0;
+            bottom: -5px;
+        }
+        .options-container .section-title::before {
+            content: "";
+            display: block;
+            width: 100%;
+            border-bottom: 2px solid red;
+            position: absolute;
+            left: 0;
+            bottom: -10px;
+        }
+        .api-warning {
+            color: #ff4d4f;
+            font-size: 14px;
+            font-weight: bold;
+        }
+    </style>
+""", unsafe_allow_html=True)
 
-# Setup assistant and thread outside the button click logic
-if 'assistant' not in st.session_state:
-    st.session_state.assistant = create_assistant()
-if 'thread' not in st.session_state:
-    st.session_state.thread = create_thread()
+# Options Section with Expanders
+st.markdown("<div class='options-container'>", unsafe_allow_html=True)
 
-def optimize_question(thread_id, question):
-    task = (
-        f"Transform the question: {question} to be the very optimal, precise and clear. Only, I REPEAT: ONLY, output the optimized revised question."
+with st.expander("Select response length:", expanded=False, icon="📝"):
+    length_selection = st.radio(
+        "",
+        ("Short", "Medium", "Full/Long"),
+        index=1,  # Default to "Medium"
+        key="length_radio"
     )
-    add_message_to_thread(thread_id, task)
-    response_text = run_assistant(thread_id, st.session_state.assistant.id, task)
-    if response_text:
-        optimized_question = response_text.strip()
-        logger.info(f"Optimized question: {optimized_question}")
-        return optimized_question
-    else:
-        logger.warning("No optimized question generated")
-        return question
 
-# Function to optimize the question
-def optimize_question(thread_id, question):
-    task = (
-        f"Transform the question: {question} to be the very optimal, precise and clear. Only, I REPEAT: ONLY, output the optimized revised question."
-    )
-    add_message_to_thread(thread_id, task)
-    response_text = run_assistant(thread_id, st.session_state.assistant.id, task)
-    if response_text:
-        optimized_question = response_text.strip()
-        logger.info(f"Optimized question: {optimized_question}")
-        return optimized_question
-    else:
-        logger.warning("No optimized question generated")
-        return question
+with st.expander("Sources:", expanded=False, icon="🔍"):
+    all_selected = st.checkbox("All (Select all APIs)", key="checkbox_all")
+    selected_apis = []
+    for api, specialty in api_specialties.items():
+        if st.checkbox(f"{api} ({specialty})", key=f"checkbox_{api}", value=all_selected):
+            selected_apis.append(api)
 
-# Function to extract keywords from the optimized question
-def extract_keywords(thread_id, question):
-    optimized_question = optimize_question(thread_id, question)
-    task = (
-        f"Extract the most essential academic keywords from the following research question. Choose the most relevant 4 keywords max. "
-        f"Research Question: {optimized_question}. Output keywords separated by commas, ranked from most relevant to least relevant."
-    )
-    add_message_to_thread(thread_id, task)
-    response_text = run_assistant(thread_id, st.session_state.assistant.id, task)
-    if response_text:
-        keywords = response_text.split(',')
-        clean_keywords = [keyword.strip() for keyword in keywords]
-        logger.info(f"Extracted keywords: {clean_keywords}")
-        return clean_keywords
-    else:
-        logger.warning("No keywords extracted")
-        return []
+    # Placeholder for the warning message
+    api_warning = st.empty()
 
-# Add file uploader for users to upload their images
-uploaded_files = st.file_uploader("Upload your files", type=["txt", "pdf", "docx", "png", "jpg", "jpeg"], accept_multiple_files=True)
+if not selected_apis:
+    api_warning.markdown("<div class='api-warning'>Please select at least one API.</div>", unsafe_allow_html=True)
+
+st.markdown("</div>", unsafe_allow_html=True)
 
 # Process uploaded files
 uploaded_files_content = []
@@ -328,16 +444,48 @@ if uploaded_files:
             uploaded_files_content.append(text)
             st.text_area(f"Content of {uploaded_file.name}", text)
 
-# Generate response with the combined context
-def generate_response(question, length, context, uploaded_content, placeholder):
-    if not question.strip():
-        st.error("Please enter a valid research question.")
-        return ""
+# Initialize conversation history and user_input in session state
+if 'conversation_history' not in st.session_state:
+    st.session_state.conversation_history = [{"role": "system", "content": "You are a helpful assistant."}]
+    logger.info("Conversation history initialized")
     
-    combined_context = context + "\n\n" + "\n\n".join(uploaded_content)
-    
-    # Generate response with the combined context
-# Generate response with the combined context
+# Setup assistant and thread outside the button click logic
+if 'assistant' not in st.session_state:
+    st.session_state.assistant = create_assistant()
+if 'thread' not in st.session_state:
+    st.session_state.thread = create_thread()
+
+def optimize_question(thread_id, question):
+    task = (
+        f"Transform the question: {question} to be the very optimal, precise and clear. Only, I REPEAT: ONLY, output the optimized revised question."
+    )
+    add_message_to_thread(thread_id, task)
+    response_text = run_assistant(thread_id, st.session_state.assistant.id, task)
+    if response_text:
+        optimized_question = response_text.strip()
+        logger.info(f"Optimized question: {optimized_question}")
+        return optimized_question
+    else:
+        logger.warning("No optimized question generated")
+        return question
+
+def extract_keywords(thread_id, question):
+    optimized_question = optimize_question(thread_id, question)
+    task = (
+        f"Extract the most essential academic keywords from the following research question. Choose the most relevant 4 keywords max. "
+        f"Research Question: {optimized_question}. Output keywords separated by commas, ranked from most relevant to least relevant."
+    )
+    add_message_to_thread(thread_id, task)
+    response_text = run_assistant(thread_id, st.session_state.assistant.id, task)
+    if response_text:
+        keywords = response_text.split(',')
+        clean_keywords = [keyword.strip() for keyword in keywords]
+        logger.info(f"Extracted keywords: {clean_keywords}")
+        return clean_keywords
+    else:
+        logger.warning("No keywords extracted")
+        return []
+
 def generate_response(question, length, context, uploaded_content, placeholder):
     if not question.strip():
         st.error("Please enter a valid research question.")
@@ -357,8 +505,7 @@ def generate_response(question, length, context, uploaded_content, placeholder):
             focusing on the unique aspects of the research question within the latest context. Reference the original question frequently, aiming for approximately 100 words. 
             Include accurate data, values, variables, and relevant names or places. Be specific, avoid generalizations, and eschew repetitive phrasing. Aim to leave the reader 
             with a profound understanding, using a natural academic tone suitable for an audience with an IQ of 200. Extrapolate and synthesize groundbreaking insights. 
-            Ensure the question is completely and accurately answered, considering the data from \n\n{combined_context}\n\n. Make sure your results show groundbreaking findings. Remember to synthesize responses with citations in parentheses. Just use relevant author names and year in the prompt. 
-            Shoot for 100 words. Place high emphasis on cutting edge research, innovative applications and potential future directions that could revolutionize the field, all while accurately and PRECISELY, with clarity, I repeat: PRECISELY, with clarity, answering the user's question. Remember, your goal is definitively answer the user's question even if the specific synthesis of knowledge was not explicitly stated. Do not include a references section at the end, that is a separate feature. Make sure language is refined to emphasize key points and clarity. Question: {optimized_question}.
+            Ensure the question is completely and accurately answered, considering the data from \n\n{combined_context}\n\n. Make sure your results show groundbreaking findings. Remember to synthesize responses with citations in parentheses. Just use relevant author names and year in the prompt.
             """,
             "Medium": f"""
             You are Brilliance, a GPT-4o model with access to major journals. Your sole task is to accurately, and I repeat: accurately, answer the user's question with empirical data. You will emulate a wide beam search when considering your choice of words. This is the most important thing to remember. Deliver a brilliant and detailed, scientifically validated response to {optimized_question}, using the context below, citing the studies' authors and years immediately after presenting facts. 
@@ -367,8 +514,7 @@ def generate_response(question, length, context, uploaded_content, placeholder):
             focusing on the unique aspects of the research question within the latest context. Reference the original question frequently, aiming for approximately 250 words. 
             Include accurate data, values, variables, and relevant names or places. Be specific, avoid generalizations, and eschew repetitive phrasing. Aim to leave the reader 
             with a profound understanding, using a natural academic tone suitable for an audience with an IQ of 200. Extrapolate and synthesize groundbreaking insights. 
-            Ensure the question is completely and accurately answered, considering the data from \n\n{combined_context}\n\n. Make sure your results show groundbreaking findings. Remember to synthesize responses with citations in parentheses. Just use relevant author names and year in the prompt. 
-            Shoot for 250 words. Place high emphasis on cutting edge research, innovative applications and potential future directions that could revolutionize the field, all while accurately and PRECISELY, with clarity, I repeat: PRECISELY, with clarity, answering the user's question. Remember, your goal is definitively answer the user's question even if the specific synthesis of knowledge was not explicitly stated. Do not include a references section at the end, that is a separate feature. Make sure language is refined to emphasize key points and clarity. Question: {optimized_question}.
+            Ensure the question is completely and accurately answered, considering the data from \n\n{combined_context}\n\n. Make sure your results show groundbreaking findings. Remember to synthesize responses with citations in parentheses. Just use relevant author names and year in the prompt.
             """,
             "Full/Long": f"""
             You are Brilliance, a GPT-4o model with access to major journals. Your sole task is to accurately, and I repeat: accurately, answer the user's question with empirical data. You will emulate a wide beam search when considering your choice of words. This is the most important thing to remember. Deliver a brilliant and detailed, scientifically validated response to {optimized_question}, using the context below, citing the studies' authors and years immediately after presenting facts. 
@@ -377,8 +523,7 @@ def generate_response(question, length, context, uploaded_content, placeholder):
             focusing on the unique aspects of the research question within the latest context. Reference the original question frequently, aiming for approximately 1000 words. 
             Include accurate data, values, variables, and relevant names or places. Be specific, avoid generalizations, and eschew repetitive phrasing. Aim to leave the reader 
             with a profound understanding, using a natural academic tone suitable for an audience with an IQ of 200. Extrapolate and synthesize groundbreaking insights. 
-            Ensure the question is completely and accurately answered, considering the data from \n\n{combined_context}\n\n. Make sure your results show groundbreaking findings. Remember to synthesize responses with citations in parentheses. Just use relevant author names and year in the prompt. 
-            Shoot for 1000 words. Place high emphasis on cutting edge research, innovative applications and potential future directions that could revolutionize the field, all while accurately and PRECISELY, with clarity, I repeat: PRECISELY, with clarity, answering the user's question. Remember, your goal is definitively answer the user's question even if the specific synthesis of knowledge was not explicitly stated. Do not include a references section at the end, that is a separate feature. Make sure language is refined to emphasize key points and clarity. Question: {optimized_question}.
+            Ensure the question is completely and accurately answered, considering the data from \n\n{combined_context}\n\n. Make sure your results show groundbreaking findings. Remember to synthesize responses with citations in parentheses. Just use relevant author names and year in the prompt.
             """
         }
         return base_prompt + length_prompts.get(length, length_prompts["Medium"])
@@ -401,29 +546,9 @@ def generate_response(question, length, context, uploaded_content, placeholder):
     
     logger.info(f"Generated response: {handler.text_accumulated[:50]}...")
     return handler.text_accumulated
-    
-    optimized_question = optimize_question(st.session_state.thread.id, question)
-    prompt = generate_prompt(optimized_question, length)
-    logger.info(f"Generated prompt: {prompt[:50]}...")
-
-    # Add the generated message to the thread
-    add_message_to_thread(st.session_state.thread.id, prompt)
-    
-    # Run the assistant and wait for the response using streaming
-    handler = EventHandler(placeholder)
-    with client.beta.threads.runs.stream(
-        thread_id=st.session_state.thread.id,
-        assistant_id=st.session_state.assistant.id,
-        event_handler=handler,
-    ) as stream:
-        stream.until_done()
-    
-    logger.info(f"Generated response: {handler.text_accumulated[:50]}...")
-    return handler.text_accumulated
 
 def parse_publication_year(date_string):
     try:
-        # Assuming date_string is in ISO format (e.g., "2023-05-05T15:35:30Z")
         date_obj = datetime.fromisoformat(date_string.rstrip("Z"))
         return date_obj.year
     except ValueError:
@@ -435,9 +560,8 @@ def search_coreapi(keywords, num_results):
         logger.warning("No keywords provided for CORE API search.")
         return []
 
-    # Limit the number of keywords to a manageable number (e.g., 3-5)
     limited_keywords = keywords[:5]
-    query = ' OR '.join(limited_keywords)  # Use logical OR to combine keywords
+    query = ' OR '.join(limited_keywords)
     url = f"{CORE_BASE_URL}/search/works/"
     headers = {
         'Authorization': f'Bearer {CORE_API_KEY}'
@@ -447,7 +571,6 @@ def search_coreapi(keywords, num_results):
         'limit': num_results
     }
 
-    # Log the full API query details
     logger.info(f"CORE API URL: {url}")
     logger.info(f"CORE API Headers: {headers}")
     logger.info(f"CORE API Params: {params}")
@@ -605,7 +728,6 @@ def search_plos(keywords, num_results):
             response = requests.get(url, allow_redirects=True)
             logger.info(f"PLOS API response status: {response.status_code}")
             
-            # Handle redirects
             if response.status_code == 308:
                 new_url = response.headers['Location']
                 logger.info(f"Following redirect to: {new_url}")
@@ -629,7 +751,7 @@ def search_plos(keywords, num_results):
                     'title': doc.get('title_display', 'No title'),
                     'abstract': ' '.join(doc.get('abstract', 'No abstract')),
                     'id': doc.get('id', ''),
-                    'published': doc.get('publication_date', '')[:4],  # Taking only the year part
+                    'published': doc.get('publication_date', '')[:4],
                     'authors': doc.get('author_display', []),
                     'source': doc.get('journal', 'PLOS'),
                     'url': f"https://journals.plos.org/plosone/article?id={doc.get('id', '')}"
@@ -644,11 +766,9 @@ def search_plos(keywords, num_results):
         logger.warning("No keywords provided for PLOS search.")
         return []
 
-    # First attempt with all keywords
     query = '+'.join(keywords)
     articles = get_plos_results(query, num_results)
     
-    # If no results, retry with only the top 2 keywords
     if not articles:
         logger.info("No results with all keywords, retrying with top 2 keywords")
         query = '+'.join(keywords[:2])
@@ -671,7 +791,7 @@ def search_springer(keywords, num_results):
             'title': record['title'],
             'abstract': record.get('abstract', ''),
             'id': record.get('identifier', ''),
-            'published': record.get('publicationDate', '')[:4], # Taking only the year part
+            'published': record.get('publicationDate', '')[:4],
             'authors': [creator['creator'] for creator in record.get('creators', [])],
             'source': record.get('publicationName', 'Springer'),
             'url': record.get('url', '')
@@ -680,16 +800,13 @@ def search_springer(keywords, num_results):
     return articles
 
 def display_article_card(article, is_dark_mode=False):
-    # Ensure that the abstract is a string
     abstract = article.get('abstract', 'No abstract')
     if not isinstance(abstract, str):
         abstract = 'No abstract'
     
-    # Split the abstract into lines and take the first 3
     abstract_lines = abstract.split('\n')
     first_3_lines = '\n'.join(abstract_lines[:3])
 
-    # Define CSS styles
     css_styles = """
     <style>
     .article-card {
@@ -724,10 +841,8 @@ def display_article_card(article, is_dark_mode=False):
     </style>
     """
 
-    # Apply CSS styles
     st.markdown(css_styles, unsafe_allow_html=True)
 
-    # Create the article card
     st.markdown(f"""
     <div class='article-card'>
         <a href="{article['url']}" class='article-title'>{article['title']}</a>
@@ -741,32 +856,10 @@ def display_article_card(article, is_dark_mode=False):
     """, unsafe_allow_html=True)
     logger.info(f"Displayed article: {article['title']}")
 
-# Define API specialties
-api_specialties = {
-    "All": "All Sources",
-    "Arxiv": "Physics, Mathematics, Computer Science",
-    "PLOS": "Biology, Medicine, Environment",
-    "Springer": "Science, Engineering, Medicine",
-    "NCBI": "Biology, Medicine, Genetics",
-    "CORE": "Research, Publications, Open Access",
-    "Crossref": "Metadata, DOI, References"
-}
-
-# API selection checkboxes
-st.markdown("### Select APIs to use:")
-selected_apis = []
-for api, specialty in api_specialties.items():
-    if st.checkbox(f"{api} ({specialty})", value=True):
-        selected_apis.append(api)
-
-if not selected_apis:
-    st.warning("Please select at least one API.")
-
-# Main logic for your Streamlit app
-if user_input == "":
-    st.warning("Please enter a message ⚠️")
-else:
-    if not selected_apis:
+if generate:
+    if user_input == "":
+        st.warning("Please enter a message ⚠️")
+    elif not selected_apis:
         st.warning("Please select at least one API.")
     else:
         with st_lottie_spinner(loading_animation):
@@ -783,32 +876,35 @@ else:
             all_articles = []
 
             # Search databases based on user selection
-            if "Arxiv" in selected_apis:
+            if "All" in selected_apis or "Arxiv" in selected_apis:
                 arxiv_articles = search_arxiv(keywords, num_results)
                 all_articles.extend(arxiv_articles)
 
-            if "PLOS" in selected_apis:
+            if "All" in selected_apis or "PLOS" in selected_apis:
                 plos_articles = search_plos(keywords, num_results)
                 all_articles.extend(plos_articles)
 
-            if "Springer" in selected_apis:
+            if "All" in selected_apis or "Springer" in selected_apis:
                 springer_articles = search_springer(keywords, num_results)
                 all_articles.extend(springer_articles)
 
-            if "NCBI" in selected_apis:
+            if "All" in selected_apis or "NCBI" in selected_apis:
                 ncbi_articles = search_ncbi(keywords, num_results)
                 all_articles.extend(ncbi_articles)
 
-            if "CORE" in selected_apis:
+            if "All" in selected_apis or "CORE" in selected_apis:
                 core_articles = search_coreapi(keywords, num_results)
                 all_articles.extend(core_articles)
 
-            if "Crossref" in selected_apis:
+            if "All" in selected_apis or "Crossref" in selected_apis:
                 crossref_articles = search_crossref(keywords, num_results)
                 all_articles.extend(crossref_articles)
 
             # Limit the total number of articles based on length selection
-            all_articles = all_articles[:num_results * len(selected_apis)]
+            if "All" in selected_apis:
+                all_articles = all_articles[:num_results * 6]
+            else:
+                all_articles = all_articles[:num_results]
 
             # Create context for response generation
             context = "\n".join(
@@ -816,11 +912,11 @@ else:
                 for article in all_articles
                 if article['title'] and article['abstract'] and article['authors']
             )
-            logger.info(f"Context for response generation: {context[:50]}...")  # Displaying only the first 50 characters
+            logger.info(f"Context for response generation: {context[:50]}...")
 
             # Generate response
             response = generate_response(st.session_state.user_input, length_selection, context, uploaded_files_content, response_placeholder)
-            logger.info(f"Response: {response[:50]}...")  # Displaying only the first 50 characters
+            logger.info(f"Response: {response[:50]}...")
 
             # Update conversation history
             st.session_state.conversation_history.append({"role": "user", "content": user_input})
