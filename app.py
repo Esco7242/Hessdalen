@@ -387,7 +387,7 @@ st.markdown("""
 # Options Section with Expanders
 st.markdown("<div class='options-container'>", unsafe_allow_html=True)
 
-with st.expander("Select response length:", expanded=False, icon="📝"):
+with st.expander("Select response length:", expanded=False):
     length_selection = st.radio(
         "",
         ("Short", "Medium", "Full/Long"),
@@ -395,7 +395,7 @@ with st.expander("Select response length:", expanded=False, icon="📝"):
         key="length_radio"
     )
 
-with st.expander("Sources:", expanded=False, icon="🔍"):
+with st.expander("Sources:", expanded=False):
     all_selected = st.checkbox("All (Select all APIs)", key="checkbox_all")
     selected_apis = []
     for api, specialty in api_specialties.items():
