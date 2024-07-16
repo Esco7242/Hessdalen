@@ -135,7 +135,7 @@ api_specialties = {
     "Arxiv": "Physics, Mathematics 🔬",
     "PLOS": "Biology, Medicine 🌿",
     "Springer": "Science, Medicine ⚙️",
-    "PubMed": "Medicine 💊",
+    "NCBI": "Biology, Medicine 🧬",
     "CORE": "Research, Publications 📚",
     "Crossref": "Metadata, DOI, References 🔗"
 }
