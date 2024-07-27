@@ -18,122 +18,103 @@ import time
 
 import streamlit as st
 
-# Custom CSS for layout, spacing, color scheme, typography, and responsive design
+# Custom CSS for layout and spacing
 st.markdown("""
     <style>
-        /* Custom CSS for layout, spacing, color scheme, typography, and responsive design */
-body {
-    background-color: #f0f2f6;
-}
+        .main-title {
+            margin-top: 40px;
+            margin-bottom: 20px;
+            font-size: 30px;  /* Further reduced font size */
+            line-height: 1.2;  /* Adjust line height */
+            white-space: nowrap;  /* Prevent wrapping */
+        }
+        .input-area, .api-selection, .response-section {
+            margin-top: 20px;
+            margin-bottom: 20px;
+            padding: 20px;
+            border-radius: 10px;
+            background-color: #f9f9f9;
+        }
+        .custom-button {
+            margin-top: 10px;
+        }
+    </style>
+""", unsafe_allow_html=True)
 
-.main-title {
-    color: #4CAF50;
-    font-size: 40px;
-    white-space: normal;  /* Allow text to wrap */
-    word-wrap: break-word;  /* Allow long words to break */
-    overflow-wrap: break-word;  /* Better browser support for word breaking */
-    max-width: 100%;
-    margin-top: 40px;
-    margin-bottom: 20px;
-    text-align: center;  /* Center align the title */
-}
+# Custom CSS for color scheme and typography
+st.markdown("""
+    <style>
+        body {
+            background-color: #f0f2f6;
+        }
+        .main-title {
+            color: #4CAF50;
+        }
+        .input-area, .api-selection, .response-section {
+            background-color: #ffffff;
+            border: 1px solid #ddd;
+        }
+        .custom-button {
+            background-color: #4CAF50;
+            color: white;
+        }
+        .custom-button:hover {
+            background-color: #45a049;
+        }
+        .upload-box {
+            background-color: #e0e0e0;
+            border: 2px dashed #ccc;
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        .upload-box:hover {
+            background-color: #d0d0d0;
+        }
+        .search-box {
+            width: 100%;
+            font-size: 18px;
+            padding: 10px;
+            border-radius: 5px;
+            border: 1px solid #ccc;
+            margin-bottom: 20px;
+        }
+        .options-container {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 20px;
+        }
+        .section-title {
+            font-size: 1em;
+            font-weight: normal;  /* Remove bold */
+            color: #333;
+        }
+        .options-container label {
+            font-size: 1em;
+            color: #333;
+        }
+        .api-warning {
+            display: none;
+            color: #FFA500;
+            font-size: 1em;
+        }
+    </style>
+""", unsafe_allow_html=True)
 
-.input-area, .api-selection, .response-section {
-    background-color: #ffffff;
-    border: 1px solid #ddd;
-    margin-top: 20px;
-    margin-bottom: 20px;
-    padding: 20px;
-    border-radius: 10px;
-}
-
-.custom-button {
-    background-color: #4CAF50;
-    color: white;
-    margin-top: 10px;
-    border: none;
-    padding: 10px 20px;
-    font-size: 16px;
-    border-radius: 5px;
-    cursor: pointer;
-    transition: background-color 0.3s ease;
-}
-
-.custom-button:hover {
-    background-color: #45a049;
-}
-
-.upload-box {
-    background-color: #e0e0e0;
-    border: 2px dashed #ccc;
-    padding: 20px;
-    border-radius: 10px;
-    text-align: center;
-    margin-bottom: 20px;
-}
-
-.upload-box:hover {
-    background-color: #d0d0d0;
-}
-
-.search-box {
-    width: 100%;
-    font-size: 18px;
-    padding: 10px;
-    border-radius: 5px;
-    border: 1px solid #ccc;
-    margin-bottom: 20px;
-}
-
-.options-container {
-    display: flex;
-    justify-content: space-between;
-    margin-bottom: 20px;
-    flex-wrap: wrap;  /* Allow options to wrap on small screens */
-}
-
-.section-title {
-    font-size: 1em;
-    font-weight: normal;
-    color: #333;
-}
-
-.options-container label {
-    font-size: 1em;
-    color: #333;
-}
-
-.api-warning {
-    display: none;
-    color: #FFA500;
-    font-size: 1em;
-}
-
-@media screen and (max-width: 600px) {
-    .main-title {
-        font-size: 30px;
-    }
-
-    .custom-button {
-        font-size: 14px;
-        padding: 8px 16px;
-    }
-
-    .options-container {
-        flex-direction: column;  /* Stack options vertically on small screens */
-        align-items: flex-start;
-    }
-
-    .input-area, .api-selection, .response-section {
-        padding: 15px;
-    }
-}
-
-@media screen and (min-width: 601px) {
-    .main-title {
-        font-size: 40px;
-    }
-}
+# Additional CSS for responsive design
+st.markdown("""
+    <style>
+        @media screen and (max-width: 600px) {
+            .main-title {
+                font-size: 25px;  /* Adjust for small screens */
+            }
+        }
+        @media screen and (min-width: 601px) {
+            .main-title {
+                font-size: 30px;  /* Adjust for larger screens */
+            }
+        }
     </style>
 """, unsafe_allow_html=True)
 
