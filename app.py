@@ -408,7 +408,7 @@ with st.expander("Select response length:", expanded=False):
     length_selection = st.radio(
         "",
         ("Short", "Medium", "Full/Long"),
-        index=1,  # Default to "Medium"
+        index=2,  # Default to "Full/Long"
         key="length_radio"
     )
 
