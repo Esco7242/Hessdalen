@@ -16,28 +16,9 @@ import docx
 from PIL import Image
 import time
 
-# Custom CSS for layout and spacing
-st.markdown("""
-    <style>
-        .main-title {
-            margin-top: 40px;
-            margin-bottom: 20px;
-            font-size: 40px;  /* Reduced font size */
-        }
-        .input-area, .api-selection, .response-section {
-            margin-top: 20px;
-            margin-bottom: 20px;
-            padding: 20px;
-            border-radius: 10px;
-            background-color: #f9f9f9;
-        }
-        .custom-button {
-            margin-top: 10px;
-        }
-    </style>
-""", unsafe_allow_html=True)
+import streamlit as st
 
-# Custom CSS for color scheme and typography
+# Custom CSS for layout, spacing, color scheme, typography, and responsive design
 st.markdown("""
     <style>
         body {
@@ -45,15 +26,26 @@ st.markdown("""
         }
         .main-title {
             color: #4CAF50;
-            font-size: 40px;  /* Reduced font size */
+            font-size: 40px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            max-width: 100%;
+            margin-top: 40px;
+            margin-bottom: 20px;
         }
         .input-area, .api-selection, .response-section {
             background-color: #ffffff;
             border: 1px solid #ddd;
+            margin-top: 20px;
+            margin-bottom: 20px;
+            padding: 20px;
+            border-radius: 10px;
         }
         .custom-button {
             background-color: #4CAF50;
             color: white;
+            margin-top: 10px;
         }
         .custom-button:hover {
             background-color: #45a049;
@@ -84,7 +76,7 @@ st.markdown("""
         }
         .section-title {
             font-size: 1em;
-            font-weight: normal;  /* Remove bold */
+            font-weight: normal;
             color: #333;
         }
         .options-container label {
@@ -96,24 +88,20 @@ st.markdown("""
             color: #FFA500;
             font-size: 1em;
         }
-    </style>
-""", unsafe_allow_html=True)
-
-# Additional CSS for responsive design
-st.markdown("""
-    <style>
         @media screen and (max-width: 600px) {
             .main-title {
-                font-size: 30px;  /* Adjust for small screens */
+                font-size: 30px;
             }
         }
         @media screen and (min-width: 601px) {
             .main-title {
-                font-size: 40px;  /* Adjust for larger screens */
+                font-size: 40px;
             }
         }
     </style>
 """, unsafe_allow_html=True)
+
+# Your Streamlit app code continues here...
 
 OPENAI_API_KEY = st.secrets["openai"]["api_key"]
 NCBI_BASE_URL = st.secrets["ncbi"]["base_url"]
