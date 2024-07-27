@@ -648,7 +648,7 @@ def search_ncbi(keywords, num_results):
         return []
 
     query = '+'.join(keywords)
-    url = f"{NCBI_BASE_URL}esearch.fcgi?db=pubmed&term={query}&retmode=json&retmax={num_results}"
+    url = f"{NCBI_BASE_URL}esearch.fcgi?db=pubmed&term={query}&retmode=json&retmax=20"
     response = requests.get(url)
     logger.info(f"NCBI API response status: {response.status_code}")
 
