@@ -26,7 +26,7 @@ st.markdown("""
         }
         .main-title {
             color: #4CAF50;
-            font-size: 40px;
+            font-size: 34px;
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
