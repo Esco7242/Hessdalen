@@ -22,6 +22,7 @@ st.markdown("""
         .main-title {
             margin-top: 40px;
             margin-bottom: 20px;
+            font-size: 40px;  /* Reduced font size */
         }
         .input-area, .api-selection, .response-section {
             margin-top: 20px;
@@ -44,7 +45,7 @@ st.markdown("""
         }
         .main-title {
             color: #4CAF50;
-            font-size: 36px;  /* Reduced font size */
+            font-size: 40px;  /* Reduced font size */
         }
         .input-area, .api-selection, .response-section {
             background-color: #ffffff;
@@ -98,9 +99,20 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
-# Load Google Fonts
+# Additional CSS for responsive design
 st.markdown("""
-    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        @media screen and (max-width: 600px) {
+            .main-title {
+                font-size: 30px;  /* Adjust for small screens */
+            }
+        }
+        @media screen and (min-width: 601px) {
+            .main-title {
+                font-size: 40px;  /* Adjust for larger screens */
+            }
+        }
+    </style>
 """, unsafe_allow_html=True)
 
 OPENAI_API_KEY = st.secrets["openai"]["api_key"]
