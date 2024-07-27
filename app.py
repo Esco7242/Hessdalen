@@ -44,6 +44,7 @@ st.markdown("""
         }
         .main-title {
             color: #4CAF50;
+            font-size: 40px;  /* Reduced font size */
         }
         .input-area, .api-selection, .response-section {
             background-color: #ffffff;
@@ -101,7 +102,6 @@ st.markdown("""
 st.markdown("""
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
 """, unsafe_allow_html=True)
-
 
 OPENAI_API_KEY = st.secrets["openai"]["api_key"]
 NCBI_BASE_URL = st.secrets["ncbi"]["base_url"]
