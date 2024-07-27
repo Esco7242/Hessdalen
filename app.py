@@ -413,7 +413,7 @@ with st.expander("Select response length:", expanded=False):
     )
 
 with st.expander("Sources:", expanded=False):
-    all_selected = st.checkbox("All (Select all APIs)", key="checkbox_all")
+    all_selected = st.checkbox("All (Select all APIs)", key="checkbox_all", value=True)
     selected_apis = []
     for api, specialty in api_specialties.items():
         if st.checkbox(f"{api} ({specialty})", key=f"checkbox_{api}", value=all_selected):
