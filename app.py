@@ -81,7 +81,7 @@ st.markdown("""
             margin-bottom: 20px;
         }
         .section-title {
-            font-size: 1.1em;
+            font-size: 1em;
             font-weight: normal;  /* Remove bold */
             color: #333;
         }
