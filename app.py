@@ -16,6 +16,7 @@ import docx
 from PIL import Image
 import time
 
+# Custom CSS for layout, spacing, color scheme, typography, and responsive design
 import streamlit as st
 
 # Custom CSS for layout, spacing, color scheme, typography, and responsive design
@@ -26,10 +27,10 @@ st.markdown("""
         }
         .main-title {
             color: #4CAF50;
-            font-size: 34px;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
+            font-size: 40px;
+            white-space: normal;  /* Changed from nowrap to normal */
+            word-wrap: break-word;  /* Added to allow long words to break */
+            overflow-wrap: break-word;  /* Added for better browser support */
             max-width: 100%;
             margin-top: 40px;
             margin-bottom: 20px;
@@ -100,6 +101,8 @@ st.markdown("""
         }
     </style>
 """, unsafe_allow_html=True)
+
+# Your Streamlit app code continues here...
 
 # Your Streamlit app code continues here...
 
