@@ -44,7 +44,7 @@ st.markdown("""
         }
         .main-title {
             color: #4CAF50;
-            font-size: 40px;  /* Reduced font size */
+            font-size: 36px;  /* Reduced font size */
         }
         .input-area, .api-selection, .response-section {
             background-color: #ffffff;
