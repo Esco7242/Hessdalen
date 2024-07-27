@@ -740,7 +740,7 @@ def search_crossref(keywords, num_results):
 
 def search_plos(keywords, num_results):
     def get_plos_results(query, num_results):
-        url = f"https://api.plos.org/search?q=everything:{query}&fl=id,title_display,abstract,author_display,journal,publication_date&wt=json&rows={num_results}"
+        url = f"https://api.plos.org/search?q=everything:{query}&fl=id,title_display,abstract,author_display,journal,publication_date&wt=json&rows=20"
         try:
             response = requests.get(url, allow_redirects=True)
             logger.info(f"PLOS API response status: {response.status_code}")
