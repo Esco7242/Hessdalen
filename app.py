@@ -621,7 +621,7 @@ def search_arxiv(keywords, num_results):
         logger.warning("No keywords provided for Arxiv search.")
         return []
     query = '+'.join(keywords)
-    url = f"http://export.arxiv.org/api/query?search_query=all:{query}&start=1&max_results={num_results}"
+    url = f"http://export.arxiv.org/api/query?search_query=all:{query}&start=1&max_results=5"
     response = requests.get(url)
     logger.info(f"Arxiv API response status: {response.status_code}")
     root = ElementTree.fromstring(response.content)
@@ -648,7 +648,7 @@ def search_ncbi(keywords, num_results):
         return []
 
     query = '+'.join(keywords)
-    url = f"{NCBI_BASE_URL}esearch.fcgi?db=pubmed&term={query}&retmode=json&retmax=20"
+    url = f"{NCBI_BASE_URL}esearch.fcgi?db=pubmed&term={query}&retmode=json&retmax=5"
     response = requests.get(url)
     logger.info(f"NCBI API response status: {response.status_code}")
 
@@ -701,7 +701,7 @@ def search_crossref(keywords, num_results):
     url = f"{CROSSREF_BASE_URL}/works"
     params = {
         'query': query,
-        'rows': num_results,
+        'rows': 5,
         'filter': 'has-abstract:true',
         'select': 'DOI,title,abstract,author,published,URL'
     }
@@ -740,7 +740,7 @@ def search_crossref(keywords, num_results):
 
 def search_plos(keywords, num_results):
     def get_plos_results(query, num_results):
-        url = f"https://api.plos.org/search?q=everything:{query}&fl=id,title_display,abstract,author_display,journal,publication_date&wt=json&rows=20"
+        url = f"https://api.plos.org/search?q=everything:{query}&fl=id,title_display,abstract,author_display,journal,publication_date&wt=json&rows=5"
         try:
             response = requests.get(url, allow_redirects=True)
             logger.info(f"PLOS API response status: {response.status_code}")
@@ -798,7 +798,7 @@ def search_springer(keywords, num_results):
         logger.warning("No keywords provided for Springer search.")
         return []
     query = ' AND '.join(keywords)
-    url = f"{SPRINGER_BASE_URL}?q={query}&api_key={SPRINGER_API_KEY}&p={num_results}"
+    url = f"{SPRINGER_BASE_URL}?q={query}&api_key={SPRINGER_API_KEY}&p=5"
     response = requests.get(url)
     logger.info(f"Springer API response status: {response.status_code}")
     data = response.json()
