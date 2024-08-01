@@ -191,7 +191,7 @@ def create_assistant():
         instructions="""
         You are a research assistant. Your beams are wide, however accuracy is of the utmost importance
         """,
-        model="gpt-4o"
+        model="gpt-4o-mini"
     )
     logger.info(f"Assistant created: {assistant.id}")
     return assistant
@@ -522,7 +522,7 @@ def generate_response(question, length, context, uploaded_content, placeholder):
             focusing on the unique aspects of the research question within the latest context. Reference the original question frequently, aiming for approximately 100 words. 
             Include accurate data, values, variables, and relevant names or places. Be specific, avoid generalizations, and eschew repetitive phrasing. Aim to leave the reader 
             with a profound understanding, using a natural academic tone suitable for an audience with an IQ of 200. Extrapolate and synthesize groundbreaking insights. 
-            Ensure the question is completely and accurately answered, considering the data from \n\n{combined_context}\n\n. Make sure your results show groundbreaking findings. Remember to synthesize responses with citations in parentheses. Just use relevant author names and year in the prompt.
+            Prioritize articles by published date and ensure all articles are taken into account before answering the question. This is of the utmost importance. Ensure the question is completely and accurately answered, considering the data from \n\n{combined_context}\n\n. Make sure your results show groundbreaking findings. Remember to synthesize responses with citations in parentheses. Just use relevant author names and year in the prompt.
             """,
             "Medium": f"""
             You are Brilliance, a GPT-4o model with access to major journals. Your sole task is to accurately, and I repeat: accurately, answer the user's question with empirical data. You will emulate a wide beam search when considering your choice of words. This is the most important thing to remember. Deliver a brilliant and detailed, scientifically validated response to {optimized_question}, using the context below, citing the studies' authors and years immediately after presenting facts. 
@@ -531,7 +531,7 @@ def generate_response(question, length, context, uploaded_content, placeholder):
             focusing on the unique aspects of the research question within the latest context. Reference the original question frequently, aiming for approximately 250 words. 
             Include accurate data, values, variables, and relevant names or places. Be specific, avoid generalizations, and eschew repetitive phrasing. Aim to leave the reader 
             with a profound understanding, using a natural academic tone suitable for an audience with an IQ of 200. Extrapolate and synthesize groundbreaking insights. 
-            Ensure the question is completely and accurately answered, considering the data from \n\n{combined_context}\n\n. Make sure your results show groundbreaking findings. Remember to synthesize responses with citations in parentheses. Just use relevant author names and year in the prompt.
+            Prioritize articles by published date and ensure all articles are taken into account before answering the question. This is of the utmost importance. Ensure the question is completely and accurately answered, considering the data from \n\n{combined_context}\n\n. Make sure your results show groundbreaking findings. Remember to synthesize responses with citations in parentheses. Just use relevant author names and year in the prompt.
             """,
             "Full/Long": f"""
             You are Brilliance, a GPT-4o model with access to major journals. Your sole task is to accurately, and I repeat: accurately, answer the user's question with empirical data. You will emulate a wide beam search when considering your choice of words. This is the most important thing to remember. Deliver a brilliant and detailed, scientifically validated response to {optimized_question}, using the context below, citing the studies' authors and years immediately after presenting facts. 
@@ -540,7 +540,7 @@ def generate_response(question, length, context, uploaded_content, placeholder):
             focusing on the unique aspects of the research question within the latest context. Reference the original question frequently, aiming for approximately 1000 words. 
             Include accurate data, values, variables, and relevant names or places. Be specific, avoid generalizations, and eschew repetitive phrasing. Aim to leave the reader 
             with a profound understanding, using a natural academic tone suitable for an audience with an IQ of 200. Extrapolate and synthesize groundbreaking insights. 
-            Ensure the question is completely and accurately answered, considering the data from \n\n{combined_context}\n\n. Make sure your results show groundbreaking findings. Remember to synthesize responses with citations in parentheses. Just use relevant author names and year in the prompt.
+            Prioritize articles by published date and ensure all articles are taken into account before answering the question. This is of the utmost importance. Ensure the question is completely and accurately answered, considering the data from \n\n{combined_context}\n\n. Make sure your results show groundbreaking findings. Remember to synthesize responses with citations in parentheses. Just use relevant author names and year in the prompt.
             """
         }
         return base_prompt + length_prompts.get(length, length_prompts["Medium"])
@@ -621,7 +621,7 @@ def search_arxiv(keywords, num_results):
         logger.warning("No keywords provided for Arxiv search.")
         return []
     query = '+'.join(keywords)
-    url = f"http://export.arxiv.org/api/query?search_query=all:{query}&start=1&max_results=5"
+    url = f"http://export.arxiv.org/api/query?search_query=all:{query}&start=1&max_results=10"
     response = requests.get(url)
     logger.info(f"Arxiv API response status: {response.status_code}")
     root = ElementTree.fromstring(response.content)
@@ -648,7 +648,7 @@ def search_ncbi(keywords, num_results):
         return []
 
     query = '+'.join(keywords)
-    url = f"{NCBI_BASE_URL}esearch.fcgi?db=pubmed&term={query}&retmode=json&retmax=5"
+    url = f"{NCBI_BASE_URL}esearch.fcgi?db=pubmed&term={query}&retmode=json&retmax=10"
     response = requests.get(url)
     logger.info(f"NCBI API response status: {response.status_code}")
 
@@ -701,12 +701,12 @@ def search_crossref(keywords, num_results):
     url = f"{CROSSREF_BASE_URL}/works"
     params = {
         'query': query,
-        'rows': 5,
+        'rows': 10,
         'filter': 'has-abstract:true',
         'select': 'DOI,title,abstract,author,published,URL'
     }
     headers = {
-        "User-Agent": "YourAppName/1.0 (mailto:your-email@example.com)"
+        "User-Agent": "YourAppName/1.0 (mailto:admin@elevatedconsultantsllc.com)"
     }
     
     response = requests.get(url, params=params, headers=headers)
@@ -798,7 +798,7 @@ def search_springer(keywords, num_results):
         logger.warning("No keywords provided for Springer search.")
         return []
     query = ' AND '.join(keywords)
-    url = f"{SPRINGER_BASE_URL}?q={query}&api_key={SPRINGER_API_KEY}&p=5"
+    url = f"{SPRINGER_BASE_URL}?q={query}&api_key={SPRINGER_API_KEY}&p=10"
     response = requests.get(url)
     logger.info(f"Springer API response status: {response.status_code}")
     data = response.json()
